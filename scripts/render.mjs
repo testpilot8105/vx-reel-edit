@@ -5,8 +5,8 @@
 // Usage: node scripts/render.mjs <video> [--draft|--final]
 import { copyFileSync, existsSync, mkdirSync, readdirSync, renameSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
-import { ffmpeg, hookFramesOf, readJson, ROOT, run, videoDir } from './lib.mjs';
+import { basename, join } from 'node:path';
+import { ffmpeg, hookFramesOf, readJson, remotion, ROOT, run, videoDir } from './lib.mjs';
 
 const args = process.argv.slice(2);
 const final = args.includes('--final');
@@ -17,16 +17,16 @@ mkdirSync(outDir, { recursive: true });
 
 if (edit.hook?.cutout && !hookFramesOf(dir, edit).ready) {
   console.log('Making the hook cutout...');
-  run('node', [join(ROOT, 'scripts/matte.mjs'), dir.split(/[\\/]/).pop()], { cwd: ROOT, stdio: ['ignore', 'inherit', 'pipe'] });
+  run(process.execPath, [join(ROOT, 'scripts/matte.mjs'), dir.split(/[\\/]/).pop()], { cwd: ROOT, stdio: ['ignore', 'inherit', 'pipe'] });
 }
-process.stderr.write(run('node', [join(ROOT, 'scripts/index-videos.mjs')], { cwd: ROOT, stdio: ['ignore', 'inherit', 'pipe'] }).err ?? '');
+process.stderr.write(run(process.execPath, [join(ROOT, 'scripts/index-videos.mjs')], { cwd: ROOT, stdio: ['ignore', 'inherit', 'pipe'] }).err ?? '');
 
 const n = readdirSync(outDir).filter((f) => /^v\d+\.mp4$/.test(f)).length + 1;
 const name = final ? 'final.mp4' : `v${n}.mp4`;
 const target = join(outDir, name);
 const rawRender = join(outDir, `.render-${name}`);
 console.log(`Rendering ${edit.id} to out/${name}${final ? '' : ' (half size draft)'}...`);
-run('npx', ['remotion', 'render', 'src/index.ts', edit.id, rawRender, `--scale=${final ? 1 : 0.5}`, '--log=error'], { cwd: ROOT, stdio: ['ignore', 'inherit', 'pipe'] });
+remotion(['render', 'src/index.ts', edit.id, rawRender, `--scale=${final ? 1 : 0.5}`, '--log=error'], { cwd: ROOT, stdio: ['ignore', 'inherit', 'pipe'] });
 
 // Master: measure, then normalise with the measured values so the result lands on target in one go.
 const { err } = ffmpeg(['-i', rawRender, '-af', 'loudnorm=I=-14:TP=-2:LRA=11:print_format=json', '-f', 'null', '-']);
@@ -47,4 +47,4 @@ if (existsSync(icloud)) {
 }
 console.log(`Done: ${target}\nLoudness before mastering ${m.input_i} LUFS, peak ${m.input_tp} dBTP.`);
 console.log(phone ? `On your phone: Files > iCloud Drive > VX Reel Edit > ${edit.id}-${name}` : 'No iCloud Drive on this computer; send the file to your phone yourself.');
-console.log(`Next: node scripts/verify.mjs ${dir.split('/').pop()} ${name}`);
+console.log(`Next: node scripts/verify.mjs ${basename(dir)} ${name}`);

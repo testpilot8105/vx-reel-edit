@@ -96,4 +96,4 @@ const raw = Object.values(probes).reduce((t, p) => t + p.duration, 0);
 const kept = out.reduce((t, s) => t + (s.out - s.in), 0);
 console.log(`${out.length} pieces, feel ${feel}: ${raw.toFixed(1)} s of footage to ${kept.toFixed(1)} s (${Math.round((1 - kept / raw) * 100)}% removed).`);
 for (const s of out) console.log(`  ${s.clip} ${s.in.toFixed(2)}-${s.out.toFixed(2)}  ${s.zoom.map(([, z]) => `${Math.round(z * 100)}%`).join(' ')}`);
-console.log(`Next: node scripts/index-videos.mjs, then preview in Studio or node scripts/render.mjs ${dir.split('/').pop()} --draft`);
+console.log(`Next: node scripts/index-videos.mjs, then preview in Studio or node scripts/render.mjs ${dir.split(/[\\/]/).pop()} --draft`);

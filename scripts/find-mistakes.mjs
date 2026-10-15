@@ -97,5 +97,5 @@ if (approve) {
   }
   edit.cuts = cuts;
   writeJson(join(dir, 'edit.json'), edit);
-  console.log(`\nApproved ${ids.join(', ')} into edit.json cuts (${cuts.length} in all). Next: node scripts/cut-pauses.mjs ${dir.split('/').pop()}`);
+  console.log(`\nApproved ${ids.join(', ')} into edit.json cuts (${cuts.length} in all). Next: node scripts/cut-pauses.mjs ${dir.split(/[\\/]/).pop()}`);
 }

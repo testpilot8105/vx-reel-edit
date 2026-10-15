@@ -191,4 +191,4 @@ for (const clip of Object.keys(edit.clips)) {
 }
 
 writeJson(join(dir, 'words.json'), out);
-console.log(`words.json: ${out.length} words. Next: node scripts/find-mistakes.mjs ${dir.split('/').pop()}`);
+console.log(`words.json: ${out.length} words. Next: node scripts/find-mistakes.mjs ${dir.split(/[\\/]/).pop()}`);

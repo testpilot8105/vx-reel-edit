@@ -36,7 +36,13 @@ for (const p of piecesOf(e).filter((x) => x.start < h.len)) {
 const frames = readdirSync(plate).filter((f) => f.endsWith('.jpg')).sort();
 if (frames.length < h.len) throw new Error(`Only ${frames.length} of ${h.len} plate frames came out.`);
 
-const executablePath = headlessShell();
+// Playwright's headless shell when there is one, else the one Remotion downloads for rendering (any system).
+let executablePath = headlessShell();
+if (!executablePath) {
+  const { ensureBrowser } = await import('@remotion/renderer');
+  const status = await ensureBrowser();
+  if ('path' in status) executablePath = status.path;
+}
 const browser = await chromium.launch(executablePath ? { executablePath } : {});
 const page = await browser.newPage();
 page.on('console', (m) => m.type() === 'error' && console.error('page:', m.text()));

@@ -54,4 +54,4 @@ for (const clip of Object.keys(edit.clips)) {
   console.log(`${clip}: ${words.length} words: ${words.map((w) => w.text).join(' ').slice(0, 160)}...`);
 }
 writeJson(join(dir, 'transcript.json'), all);
-console.log(`\ntranscript.json: ${all.length} words. Next: node scripts/pin-words.mjs ${dir.split('/').pop()}`);
+console.log(`\ntranscript.json: ${all.length} words. Next: node scripts/pin-words.mjs ${dir.split(/[\\/]/).pop()}`);

@@ -17,11 +17,12 @@ export const writeJson = (p, v) => writeFileSync(p, `${JSON.stringify(v, null, 2
 export const run = (cmd, args, opts = {}) => {
   const r = spawnSync(cmd, args, { encoding: 'utf8', maxBuffer: 1 << 28, ...opts });
   if (r.error) throw new Error(`${cmd} could not start: ${r.error.message}`);
-  if (r.status !== 0) throw new Error(`${cmd} ${args.join(' ')}\n${(r.stderr || r.stdout).slice(-3000)}`);
+  if (r.status !== 0) throw new Error(`${cmd} ${args.join(' ')}\n${(r.stderr || r.stdout || '').slice(-3000)}`);
   return { out: r.stdout, err: r.stderr };
 };
 
-/** ffmpeg and ffprobe: the system ones when installed, else the ones Remotion ships (`npx remotion ffmpeg`). */
+/** ffmpeg and ffprobe: a full install is needed (Remotion's own build lacks the filters these scripts use). Found on
+ *  the PATH, or where Homebrew (Mac) and winget (Windows) put it, for a terminal opened before the install. */
 const which = (bin) => {
   try {
     execFileSync(process.platform === 'win32' ? 'where' : 'which', [bin], { stdio: 'ignore' });
@@ -30,7 +31,22 @@ const which = (bin) => {
     return false;
   }
 };
-const tool = (bin) => (which(bin) ? [bin, []] : ['npx', ['remotion', bin]]);
+const toolCache = {};
+const tool = (bin) => {
+  if (toolCache[bin]) return toolCache[bin];
+  const exe = process.platform === 'win32' ? `${bin}.exe` : bin;
+  const places =
+    process.platform === 'win32'
+      ? [join(process.env.LOCALAPPDATA ?? '', 'Microsoft', 'WinGet', 'Links', exe), join(process.env.ProgramFiles ?? 'C:\\Program Files', 'ffmpeg', 'bin', exe)]
+      : [join('/opt/homebrew/bin', exe), join('/usr/local/bin', exe)];
+  const found = which(bin) ? bin : places.find((p) => existsSync(p));
+  if (!found)
+    throw new Error(
+      `${bin} is not installed. On a Mac: brew install ffmpeg. On Windows: winget install --id Gyan.FFmpeg -e (then open a new terminal).`,
+    );
+  toolCache[bin] = [found, []];
+  return toolCache[bin];
+};
 /** The ffmpeg command and its leading arguments, for streaming its output yourself. */
 export const ffmpegTool = () => tool('ffmpeg');
 export const ffmpeg = (args) => {
@@ -41,6 +57,10 @@ export const ffprobe = (args) => {
   const [cmd, pre] = tool('ffprobe');
   return run(cmd, [...pre, ...args]);
 };
+
+/** Remotion's command line, run with this same Node (no npx, so it works the same on Windows, Mac and Linux). */
+export const REMOTION_CLI = join(ROOT, 'node_modules', '@remotion', 'cli', 'remotion-cli.js');
+export const remotion = (args, opts = {}) => run(process.execPath, [REMOTION_CLI, ...args], opts);
 
 /** The folder of one video, found by its full name or by a unique part of it. */
 export const videoDir = (name) => {
@@ -114,19 +134,35 @@ export const speechRegions = (wav, { noise = null, minSilence = 0.25 } = {}) => 
   return regions;
 };
 
-/** whisper-cli from the PATH (Homebrew on a Mac), else built into whisper/ by Remotion's installer. */
+/** whisper-cli from the PATH (Homebrew on a Mac), else Remotion's installer puts it in whisper/: built from source on a
+ *  Mac or Linux, unzipped from the release on Windows (where it lands in Release\\, not where the installer looks). */
 export const WHISPER = join(ROOT, 'whisper');
 const CPP_VERSION = '1.7.6';
 
-export const whisperBinary = async () => {
-  try {
-    execFileSync(process.platform === 'win32' ? 'where' : 'which', ['whisper-cli'], { stdio: 'ignore' });
-    return 'whisper-cli';
-  } catch {
-    const to = join(WHISPER, 'whisper.cpp');
-    await whisper.installWhisperCpp({ version: CPP_VERSION, to, printOutput: true });
-    return whisper.getWhisperExecutablePath(to, CPP_VERSION);
+const findFile = (dir, name) => {
+  if (!existsSync(dir)) return null;
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const p = join(dir, e.name);
+    if (e.isFile() && e.name === name) return p;
+    if (e.isDirectory()) {
+      const hit = findFile(p, name);
+      if (hit) return hit;
+    }
   }
+  return null;
+};
+
+export const whisperBinary = async () => {
+  if (which('whisper-cli')) return 'whisper-cli';
+  for (const p of ['/opt/homebrew/bin/whisper-cli', '/usr/local/bin/whisper-cli']) if (process.platform !== 'win32' && existsSync(p)) return p;
+  const to = join(WHISPER, 'whisper.cpp');
+  const name = process.platform === 'win32' ? 'whisper-cli.exe' : 'whisper-cli';
+  const have = findFile(to, name);
+  if (have) return have;
+  if (!existsSync(to)) await whisper.installWhisperCpp({ version: CPP_VERSION, to, printOutput: true });
+  const made = findFile(to, name);
+  if (!made) throw new Error(`whisper-cli was not found under ${to}. Delete that folder and run this again.`);
+  return made;
 };
 
 export const whisperModel = async () => {

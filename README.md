@@ -4,21 +4,41 @@ Drop in the video you filmed, say what you want, and Claude Code edits it like a
 mistakes, captions it, adds a hook, motion graphics, sound and an end card, renders it with Remotion, checks every
 frame, and takes your notes in plain words. Taglish included.
 
+## Install with one prompt
+
+Open Claude Code in the folder where you keep your projects and paste the prompt in
+[INSTALL-PROMPT.md](INSTALL-PROMPT.md). Claude installs what is missing, clones this repo, sets it up and checks it with
+a test render. Works on a Mac and on a Windows PC.
+
+Tested end to end on a Mac. The Windows steps follow how each tool installs on Windows but have not yet been run on
+a real PC; if a step fails there, please open an issue with its message.
+
 ## What you need
 
-- [Node.js](https://nodejs.org) 20 or newer
 - [Claude Code](https://claude.com/claude-code)
-- About 2 GB free: the packages, and a speech model that is downloaded once and runs on your own computer
+- [Node.js](https://nodejs.org) 20 or newer, git, and a full [ffmpeg](https://ffmpeg.org) (Mac: `brew install ffmpeg`;
+  Windows: `winget install -e --id Gyan.FFmpeg`). The install prompt takes care of these.
+- About 3 GB free: the packages (about 1 GB) and a speech model (about 1.6 GB) that is downloaded once and runs on your
+  own computer
 
-Built and tested on a Mac. The launchers for Windows and Linux are there, but those have not been tested yet.
+## Install by hand
 
-## Start
+```bash
+git clone https://github.com/testpilot8105/vx-reel-edit.git
+cd vx-reel-edit
+npx -y pnpm@10.33.0 install
+node scripts/setup.mjs
+```
 
-1. Download or clone this folder.
-2. Double-click the launcher for your system: `launch-vx-reel-edit (Mac).command`, `launch-vx-reel-edit (Windows).cmd`
-   or `launch-vx-reel-edit (Linux).sh`. It installs what is missing, opens Remotion Studio in your browser (the live
-   preview) and opens Claude Code in this folder.
-3. Drag your video into Claude Code and say what you want, for example "edit this into a reel". Claude runs the
+`setup.mjs` checks Node and ffmpeg, fetches the headless browser and the speech engine and model, and makes a test
+render. Run it again any time; it only fetches what is missing.
+
+## Edit a video
+
+1. Open Claude Code in the `vx-reel-edit` folder, or double-click the launcher for your system:
+   `launch-vx-reel-edit (Mac).command`, `launch-vx-reel-edit (Windows).cmd` or `launch-vx-reel-edit (Linux).sh`, which
+   also opens Remotion Studio (the live preview) in your browser.
+2. Drag your video into Claude Code and say what you want, for example "edit this into a reel". Claude runs the
    `/vx-edit-video` skill: a few questions about the look, a plan, then a draft.
 
 Your footage is copied in, never moved or changed. Edits land in `media/videos/<date>-<name>/`, renders in its `out/`.

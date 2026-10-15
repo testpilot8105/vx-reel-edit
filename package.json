@@ -4,6 +4,7 @@
   "type": "module",
   "description": "VX Reel Edit: drop in a video, Claude Code edits it into a reel. Rendered with Remotion.",
   "scripts": {
+    "setup": "node scripts/setup.mjs",
     "studio": "remotion studio",
     "ingest": "node scripts/ingest.mjs",
     "transcribe": "node scripts/transcribe.mjs",
