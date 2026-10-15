@@ -1,0 +1,37 @@
+{
+  "name": "vx-reel-edit",
+  "private": true,
+  "type": "module",
+  "description": "VX Reel Edit: drop in a video, Claude Code edits it into a reel. Rendered with Remotion.",
+  "scripts": {
+    "studio": "remotion studio",
+    "ingest": "node scripts/ingest.mjs",
+    "transcribe": "node scripts/transcribe.mjs",
+    "pin": "node scripts/pin-words.mjs",
+    "cut": "node scripts/cut-pauses.mjs",
+    "mistakes": "node scripts/find-mistakes.mjs",
+    "index": "node scripts/index-videos.mjs",
+    "render": "node scripts/render.mjs",
+    "verify": "node scripts/verify.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/captions": "4.0.535",
+    "@remotion/cli": "4.0.535",
+    "@remotion/fonts": "4.0.535",
+    "@remotion/install-whisper-cpp": "4.0.535",
+    "@remotion/media": "4.0.535",
+    "@remotion/renderer": "4.0.535",
+    "@remotion/transitions": "4.0.535",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "remotion": "4.0.535"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.0",
+    "@types/react": "19.2.2",
+    "playwright-core": "1.59.1",
+    "typescript": "5.6.3"
+  },
+  "license": "MIT"
+}

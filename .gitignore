@@ -1,0 +1,20 @@
+node_modules/
+.DS_Store
+
+# Your videos, your notes and the speech model stay on your computer, never in git.
+media/videos/*
+!media/videos/.gitkeep
+media/library/broll/*
+media/library/music/*
+media/library/sfx/*
+!media/library/*/.gitkeep
+media/library/grain/
+whisper/
+Session Logs/
+CLAUDE.local.md
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
